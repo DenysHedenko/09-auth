@@ -1,20 +1,23 @@
 import NoteForm from '@/components/NoteForm/NoteForm';
-import { Metadata } from 'next';
 import css from './CreateNote.module.css';
+import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Create New Note',
-  description: 'Create a new note in NoteHub and organize your ideas efficiently.',
+  title: 'Note Hub',
+  description: 'Create new note',
   openGraph: {
-    type: 'website',
-    url: 'https://08-zustand-three-psi.vercel.app/notes/action/create',
-    title: 'Create New Note',
-    description: 'Create a new note in NoteHub and organize your ideas efficiently.',
+    title: 'Note Hub',
+    description: 'Create new note',
+    url: `https://09-auth-delta-gold.vercel.app/notes/action/create`,
     images: [
       {
-        url: 'https://ac.goit.global/fullstack/react/notehub-og-meta.jpg',
+        url: `https://ac.goit.global/fullstack/react/notehub-og-meta.jpg`,
+        width: 1200,
+        height: 630,
+        alt: 'Note Hub',
       },
     ],
+    type: 'website',
   },
 };
 

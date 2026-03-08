@@ -1,101 +1,59 @@
 'use client';
-
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useDebouncedCallback } from 'use-debounce';
-import SearchBox from '../../../../components/SearchBox/SearchBox';
-import Pagination from '../../../../components/Pagination/Pagination';
-import NoteList from '../../../../components/NoteList/NoteList';
-import { fetchNotes, type FetchNotesResponse } from '@/lib/api';
-import css from './NotesPage.module.css';
-import Link from 'next/link';
+import NoteList from '@/components/NoteList/NoteList';
+import css from './page.module.css';
 
-interface Props {
+import { useState } from 'react';
+import { useDebouncedCallback } from 'use-debounce';
+import SearchBox from '@/components/SearchBox/SearchBox';
+import Pagination from '@/components/Pagination/Pagination';
+import Link from 'next/link';
+import { fetchNotes } from '@/lib/api/clientApi';
+
+type Props = {
   tag: string;
-}
+};
 
 export default function NotesClient({ tag }: Props) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const sp = useSearchParams();
-
-  const normalizedTag = tag === 'all' ? undefined : tag;
-
-  // Search state
-  const [inputValue, setInputValue] = useState('');
-  const [text, setText] = useState('');
-
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const setUrlParams = (next: { search?: string; page?: number }) => {
-    const params = new URLSearchParams(sp.toString());
-
-    if (typeof next.search === 'string') {
-      const val = next.search.trim();
-      if (val) params.set('search', val);
-      else params.delete('search');
-    }
-
-    if (typeof next.page === 'number') {
-      params.set('page', String(next.page));
-    }
-
-    const qs = params.toString();
-    router.push(qs ? `${pathname}?${qs}` : pathname);
-  };
-
-  // debounce
-  const debouncedApplySearch = useDebouncedCallback((value: string) => {
-    const val = value.trim();
-    setText(val);
-    setCurrentPage(1);
-    setUrlParams({ search: val, page: 1 });
-  }, 400);
-
-  const handleSearch = (value: string) => {
-    setInputValue(value);
-    debouncedApplySearch(value);
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    setUrlParams({ page });
-  };
-
-  const { data, isFetching, isLoading } = useQuery<FetchNotesResponse>({
-    queryKey: ['notes', currentPage, text, normalizedTag],
-    queryFn: () => fetchNotes(currentPage, text, normalizedTag),
+  const { data, isLoading } = useQuery({
+    queryKey: ['notes', currentPage, searchQuery, tag],
+    queryFn: () => fetchNotes({ page: currentPage, query: searchQuery, tag }),
     placeholderData: keepPreviousData,
+    refetchOnMount: false,
   });
 
-  const notes = data?.notes ?? [];
+  const updateSearchQuery = useDebouncedCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  }, 300);
+
   const totalPages = data?.totalPages ?? 0;
+  const notes = data?.notes ?? [];
 
   return (
-    <>
-      <div className={css.app}>
-        <header className={css.toolbar}>
-          <SearchBox text={inputValue} onSearch={handleSearch} />
-
-          {totalPages > 1 && (
-            <Pagination
-              pageCount={totalPages}
-              currentPage={currentPage}
-              onPageChange={handlePageChange}
-            />
-          )}
-
-          <Link href="/notes/action/create" aria-label="Create new note" className={css.button}>
-            Create note +
-          </Link>
-        </header>
+    <div className={css.app}>
+      <div className={css.toolbar}>
+        <SearchBox defaultValue={searchQuery} onChange={updateSearchQuery} />
+        {totalPages > 1 && (
+          <Pagination totalPages={totalPages} currentPage={currentPage} setPage={setCurrentPage} />
+        )}
+        <Link
+          href="/notes/action/create"
+          aria-label="Create new note"
+          className={css.button}
+          style={{ textDecoration: 'none' }}
+        >
+          Create note +
+        </Link>
       </div>
 
-      {(isLoading || isFetching) && <strong>Loading tasks ...</strong>}
-
-      {notes.length > 0 && !isLoading && <NoteList notes={notes} />}
-    </>
+      {notes.length > 0 && <NoteList notes={notes} />}
+      {!isLoading && notes.length === 0 && (
+        <h2 style={{ textAlign: 'center' }}>No search results</h2>
+      )}
+    </div>
   );
 }

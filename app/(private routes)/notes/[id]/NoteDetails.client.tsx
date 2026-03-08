@@ -1,12 +1,13 @@
 'use client';
-import { fetchNoteById } from '@/lib/api';
-import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
-import css from './NoteDetails.module.css';
-import Link from 'next/link';
 
-const NoteDetailsClient = () => {
-  const { id } = useParams<{ id: string }>();
+import css from './page.module.css';
+import { useParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import { fetchNoteById } from '@/lib/api/clientApi';
+
+export default function NoteDetailsClient() {
+  const params = useParams();
+  const id = params.id as string;
 
   const {
     data: note,
@@ -18,35 +19,38 @@ const NoteDetailsClient = () => {
     refetchOnMount: false,
   });
 
-  if (isLoading) return
-  <p className={css.content}>
-    Loading, please wait...
-  </p>;
+  if (isLoading) {
+    return <div>Loading, please wait...</div>;
+  }
 
-  if (error || !note) return
-  <p className={css.content}>
-    Something went wrong.
-  </p>;
+  if (error || !note) {
+    return <p>Something went wrong.</p>;
+  }
 
-  const formattedDate = note.updatedAt
-    ? `Updated at: ${note.updatedAt}`
-    : `Created at: ${note.createdAt}`;
+  const createdIso = note.createdAt;
+  const updatedIso = note.updatedAt;
+  const creaeted = new Date(createdIso);
+  const updated = new Date(updatedIso);
 
   return (
-    <div className={css.container}>
-      <div className={css.item}>
-        <div className={css.header}>
-          <h2>{note?.title}</h2>
-        </div>
-        <p className={css.tag}>{note?.tag}</p>
-        <p className={css.content}>{note?.content}</p>
-        <p className={css.date}>{formattedDate}</p>
-        <Link className={css.backBtn} href={`/notes/filter/all`}>
-          Back to Notes
-        </Link>
+    <div className={css.noteContainer}>
+      <h1>{note.title}</h1>
+      <span className={css.tag}>{note.tag}</span>
+      <p>{note.content}</p>
+      <div className={css.date}>
+        <p>
+          Created at: {creaeted.getFullYear()}/{String(creaeted.getMonth() + 1).padStart(2, '0')}/
+          {String(creaeted.getDate()).padStart(2, '0')}{' '}
+          {String(creaeted.getHours()).padStart(2, '0')}:
+          {String(creaeted.getMinutes()).padStart(2, '0')}
+        </p>
+        <p>
+          Last updated at: {updated.getFullYear()}/{String(updated.getMonth() + 1).padStart(2, '0')}
+          /{String(updated.getDate()).padStart(2, '0')}{' '}
+          {String(updated.getHours()).padStart(2, '0')}:
+          {String(updated.getMinutes()).padStart(2, '0')}
+        </p>
       </div>
     </div>
   );
-};
-
-export default NoteDetailsClient;
+}

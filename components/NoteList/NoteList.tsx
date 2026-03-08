@@ -1,54 +1,42 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type Note from '../../types/note';
 import Link from 'next/link';
-import { deleteNote } from '@/lib/api';
+import type { Note } from '../../types/note';
 import css from './NoteList.module.css';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { deleteNote } from '@/lib/api/clientApi';
 
 interface NoteListProps {
   notes: Note[];
 }
 
 export default function NoteList({ notes }: NoteListProps) {
-  const queryClient = useQueryClient();
-
+  const QueryClient = useQueryClient();
   const { mutate } = useMutation({
     mutationFn: deleteNote,
     onSuccess() {
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      QueryClient.invalidateQueries({ queryKey: ['notes'] });
     },
-    onError() {
-      console.log('EROR');
+    onError(error) {
+      console.error('Failed to create note:', error);
     },
   });
 
-  if (notes.length === 0) {
-    return null;
-  }
+  const noteGrid = notes.map((note: Note) => {
+    return (
+      <li key={note.id} className={css.listItem}>
+        <h2 className={css.title}>{note.title}</h2>
+        <p className={css.content}>{note.content}</p>
+        <div className={css.footer}>
+          <span className={css.tag}>{note.tag}</span>
+          <Link href={`/notes/${note.id}`} className={`${css.button} ${css.details}`}>
+            View details
+          </Link>
+          <button className={`${css.button} ${css.delete}`} onClick={() => mutate(note.id)}>
+            Delete
+          </button>
+        </div>
+      </li>
+    );
+  });
 
-  return (
-    <ul className={css.list}>
-      {notes.map(note => (
-        <li key={note.id} className={css.listItem}>
-          <h2 className={css.title}>{note.title}</h2>
-          <p className={css.content}>{note.content}</p>
-
-          <div className={css.footer}>
-            <span className={css.tag}>{note.tag}</span>
-
-            <Link
-              className={css.link}
-              href={`/notes/${note.id}`}
-              aria-label="View details"
-            >
-              View details
-            </Link>
-
-            <button className={css.button} onClick={() => mutate(note.id)}>
-              Delete
-            </button>
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
+  return <ul className={css.list}>{noteGrid}</ul>;
 }

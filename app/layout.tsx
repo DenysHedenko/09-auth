@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import { Roboto } from 'next/font/google';
 import './globals.css';
-import Header from '../components/Header/Header';
-import Footer from '../components/Footer/Footer';
-import TanStackProvider from '../components/TanStackProvider/TanStackProvider';
+import Header from '@/components/Header/Header';
+import Footer from '@/components/Footer/Footer';
+import TanStackProvider from '@/components/TanStackProvider/TanStackProvider';
+import AuthProvider from '@/components/AuthProvider/AuthProvider';
 
 const roboto = Roboto({
   subsets: ['latin'],
@@ -13,18 +14,21 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: 'NoteHub',
-  description: 'Organize and manage your notes effortlessly with NoteHub',
+  title: 'Note Hub',
+  description: 'Create and save your notes',
   openGraph: {
-    type: 'website',
-    url: 'https://08-zustand-three-psi.vercel.app/',
-    title: 'NoteHub',
-    description: 'Organize and manage your notes effortlessly with NoteHub',
+    title: 'Note Hub',
+    description: 'Create and save your notes',
+    url: 'https://09-auth-delta-gold.vercel.app/',
     images: [
       {
-        url: 'https://ac.goit.global/fullstack/react/notehub-og-meta.jpg',
+        url: `https://ac.goit.global/fullstack/react/notehub-og-meta.jpg`,
+        width: 1200,
+        height: 630,
+        alt: 'Note Hub',
       },
     ],
+    type: 'website',
   },
 };
 
@@ -39,12 +43,14 @@ export default function RootLayout({
     <html lang="en">
       <body className={roboto.variable}>
         <TanStackProvider>
-          <Header />
-
-          {children}
-          {modal}
-
-          <Footer />
+          <AuthProvider>
+            <Header />
+            <main>
+              {children}
+              {modal}
+            </main>
+            <Footer />
+          </AuthProvider>
         </TanStackProvider>
       </body>
     </html>

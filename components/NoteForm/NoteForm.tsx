@@ -1,89 +1,100 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
-import { createNote, type CreateNotePayload } from '@/lib/api';
-import { initialDraft, useNoteStore } from '@/lib/store/noteStore';
 import css from './NoteForm.module.css';
+
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNoteStore } from '@/lib/store/noteStore';
+import { useRouter } from 'next/navigation';
+import { createNote, CreateNoteProps, fetchNotes } from '@/lib/api/clientApi';
 
 export default function NoteForm() {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
-  const draft = useNoteStore(state => state.draft);
-  const setDraft = useNoteStore(state => state.setDraft);
-  const clearDraft = useNoteStore(state => state.clearDraft);
+  const { draft, setDraft, clearDraft } = useNoteStore();
+
+  const handleChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    setDraft({ ...draft, [event.target.name]: event.target.value });
+  };
 
   const { mutate, isPending } = useMutation({
     mutationFn: createNote,
-    onSuccess: () => {
+    onSuccess: async createdNote => {
+      await Promise.all([
+        queryClient.prefetchQuery({
+          queryKey: ['notes', 1, '', 'all'],
+          queryFn: () => fetchNotes({ page: 1, query: '', tag: 'all' }),
+        }),
+        queryClient.prefetchQuery({
+          queryKey: ['notes', 1, '', createdNote.tag],
+          queryFn: () => fetchNotes({ page: 1, query: '', tag: createdNote.tag }),
+        }),
+      ]);
       clearDraft();
       router.push('/notes/filter/all');
     },
+    onError(error) {
+      console.error('Failed to create note:', error);
+    },
   });
 
-  const handleCancel = () => {
-    router.push('/notes/filter/all');
-  };
-
-  const handleChange = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     const formData = new FormData(event.currentTarget);
 
-    setDraft({
+    const values: CreateNoteProps = {
       title: String(formData.get('title') ?? ''),
       content: String(formData.get('content') ?? ''),
-      tag: String(formData.get('tag') ?? 'Todo') as CreateNotePayload['tag'],
-    });
-  };
+      tag: String(formData.get('tag') ?? 'Todo'),
+    };
 
-  const handleSubmit = (formData: FormData) => {
-    const values = Object.fromEntries(formData) as CreateNotePayload;
     mutate(values);
   };
 
-  const currentDraft = draft ?? initialDraft;
+  const handleCancel = () => router.push('/notes/filter/all');
 
   return (
-    <form
-      className={css.form}
-      onChange={handleChange}
-      action={handleSubmit}
-      onSubmit={e => {
-        const form = e.currentTarget;
-        if (!form.checkValidity()) {
-          e.preventDefault();
-          form.reportValidity();
-        }
-      }}
-    >
+    <form className={css.form} onSubmit={handleSubmit}>
       <div className={css.formGroup}>
-        <label htmlFor="title">Title</label>
+        <label htmlFor={`title`}>Title</label>
         <input
-          required
-          id="title"
           type="text"
           name="title"
+          id={`title`}
           className={css.input}
+          value={draft.title}
+          onChange={handleChange}
           minLength={3}
           maxLength={50}
-          defaultValue={currentDraft.title}
+          required
         />
       </div>
 
       <div className={css.formGroup}>
-        <label htmlFor="content">Content</label>
+        <label htmlFor={`content`}>Content</label>
         <textarea
-          id="content"
           name="content"
+          id={`content`}
           rows={8}
           className={css.textarea}
+          value={draft.content}
+          onChange={handleChange}
           maxLength={500}
-          defaultValue={currentDraft.content}
         />
       </div>
 
       <div className={css.formGroup}>
-        <label htmlFor="tag">Tag</label>
-        <select id="tag" name="tag" className={css.select} defaultValue={currentDraft.tag}>
+        <label htmlFor={`tag`}>Tag</label>
+        <select
+          name="tag"
+          className={css.select}
+          id={`tag`}
+          value={draft.tag || 'Todo'}
+          onChange={handleChange}
+          required
+        >
           <option value="Todo">Todo</option>
           <option value="Work">Work</option>
           <option value="Personal">Personal</option>
@@ -96,9 +107,8 @@ export default function NoteForm() {
         <button type="button" className={css.cancelButton} onClick={handleCancel}>
           Cancel
         </button>
-
         <button type="submit" className={css.submitButton} disabled={isPending}>
-          {isPending ? 'Creating...' : 'Create note'}
+          Create note
         </button>
       </div>
     </form>

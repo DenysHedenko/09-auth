@@ -1,19 +1,18 @@
 import { Metadata } from 'next';
-import css from './page.module.css';
 
 export const metadata: Metadata = {
-  title: '404 — Page Not Found | NoteHub',
-  description:
-    'The page you are looking for does not exist or has been moved. Return to NoteHub to continue managing your notes.',
+  title: '404 - Page Not Found',
+  description: 'This page does not exist. The requested Note Hub page could not be found.',
   openGraph: {
-    type: 'website',
-    url: 'https://08-zustand-three-psi.vercel.app/',
-    title: '404 — Page Not Found | NoteHub',
-    description:
-      'The page you are looking for does not exist or has been moved. Return to NoteHub to continue managing your notes.',
+    title: '404 - Page Not Found',
+    description: 'This page does not exist. The requested Note Hub page could not be found.',
+    url: 'https://09-auth-delta-gold.vercel.app/',
     images: [
       {
         url: 'https://ac.goit.global/fullstack/react/notehub-og-meta.jpg',
+        width: 1200,
+        height: 630,
+        alt: '404 - Page Not Found',
       },
     ],
   },
@@ -21,9 +20,18 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <>
-      <h1 className={css.title}>404 - Page not found</h1>
-      <p className={css.description}>Sorry, the page you are looking for does not exist.</p>
-    </>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '50vh',
+        textAlign: 'center',
+      }}
+    >
+      <h1>404 - Page not found</h1>
+      <p>Sorry, the page you are looking for does not exist.</p>
+    </div>
   );
 }

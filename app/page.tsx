@@ -1,20 +1,8 @@
-import { Metadata } from 'next';
-import css from './page.module.css';
+import css from './home.module.css';
 
-export const metadata: Metadata = {
-  title: 'Home | NoteHub',
-  description: 'NoteHub is a simple app for creating, browsing, and organizing your notes.',
-  openGraph: {
-    title: 'Home | NoteHub',
-    description: 'NoteHub is a simple app for creating, browsing, and organizing your notes.',
-    url: 'https://08-zustand-three-psi.vercel.app/',
-    images: ['https://ac.goit.global/fullstack/react/notehub-og-meta.jpg'],
-  },
-};
-
-const Home = () => {
+export default function Home() {
   return (
-    <main className={css.main}>
+    <main>
       <div className={css.container}>
         <h1 className={css.title}>Welcome to NoteHub</h1>
         <p className={css.description}>
@@ -30,5 +18,4 @@ const Home = () => {
       </div>
     </main>
   );
-};
-export default Home;
+}
