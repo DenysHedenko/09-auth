@@ -1,4 +1,4 @@
-import css from './NotesLayout.module.css';
+import css from './LayoutNotes.module.css';
 
 export default function NotesLayout({
   children,
