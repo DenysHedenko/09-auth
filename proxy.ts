@@ -25,8 +25,8 @@ export async function proxy(request: NextRequest) {
         for (const cookieStr of cookieArray) {
           const parsed = parse(cookieStr);
           const options = {
-            expires: parsed.Expires ? new Date(parsed.Expires) : undefined,
-            path: parsed.Path,
+            expires: parsed.expires ? new Date(parsed.expires) : undefined,
+            path: parsed.path,
             maxAge: Number(parsed['Max-Age']),
           };
           if (parsed.accessToken) cookieStore.set('accessToken', parsed.accessToken, options);
@@ -42,11 +42,7 @@ export async function proxy(request: NextRequest) {
         }
 
         if (isPrivateRoute) {
-          return NextResponse.next({
-            headers: {
-              Cookie: cookieStore.toString(),
-            },
-          });
+          return NextResponse.next();
         }
       }
     }
